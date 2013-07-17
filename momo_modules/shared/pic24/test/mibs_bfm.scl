@@ -1,0 +1,14 @@
+mib_slave:process is
+
+begin
+  if START == 1
+     FEATURE = I2CDATA;
+     wait_i2c_event();
+     COMMAND = I2CDATA;
+     wait_i2c_event();
+     //Take in params for an echo
+     echo_param = I2CDATA;
+     wait_i2c_event();
+     
+                    
+	
