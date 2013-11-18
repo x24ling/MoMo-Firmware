@@ -8,12 +8,15 @@
 #define MEMORY_SUBSECTION_NUM(addr) (addr>>3)
 #define MEMORY_ADDRESS_MASK 0xFFFFFL
 
+#include "bootloader.h"
+
 void configure_SPI();
 
-bool mem_write( unsigned long addr, const BYTE* data, unsigned int length );
-bool mem_read( unsigned long addr, BYTE* buf, unsigned int numBytes );
-void mem_clear_subsection( unsigned long addr );
-void mem_clear_all();
-BYTE mem_status();
-unsigned short mem_capacity();
-bool mem_test();
+bool _BOOTLOADER_CODE mem_write_byte( unsigned long addr, BYTE data );
+bool _BOOTLOADER_CODE mem_write( unsigned long addr, const BYTE* data, unsigned int length );
+bool _BOOTLOADER_CODE mem_read( unsigned long addr, BYTE* buf, unsigned int numBytes );
+void _BOOTLOADER_CODE mem_clear_subsection( unsigned long addr );
+void _BOOTLOADER_CODE mem_clear_all();
+BYTE _BOOTLOADER_CODE mem_status();
+unsigned short _BOOTLOADER_CODE mem_capacity();
+bool _BOOTLOADER_CODE mem_test();

@@ -67,6 +67,7 @@
       #- -Werror
       - -O1
       #- -g debug
+      - -ffunction-sections
   :release_assembler:
     :executable: xc16-gcc
     :arguments:
@@ -80,6 +81,7 @@
       - -Wall
       - -O1
       - -Wa,--no-relax
+      - -ffunction-sections
   :release_linker:
     :executable: xc16-ar
     :arguments:

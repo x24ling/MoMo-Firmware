@@ -2,7 +2,7 @@
 #define _assembly_h
 
 // Assembly helpers
-extern void asm_reset();
-extern void asm_sleep();
+#define asm_reset() asm( "RESET" )
+#define asm_sleep() asm( "PWRSAV #0x0000" )
 
 #endif

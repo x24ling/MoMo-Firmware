@@ -15,9 +15,13 @@ typedef unsigned int    uint16;
 typedef signed long     int32;
 typedef unsigned long   uint32;
 
-inline uint16 makeu16( uint8 high, uint8 low );
-inline uint16 make16( int8 high, int8 low );
-inline uint32 makeu32( uint16 high, uint16 low );
-inline uint32 make32( int16 high, int16 low );
+#define makeu16( high, low )   (((uint16)high << 8) | low)
+#define make16( high, low )      (((uint16)high << 8) | low)
+#define makeu32( high, low ) (((uint32)high << 16) | low)
+#define make32( high, low )    (((uint32)high << 16) | low)
 
+#define hi_wordu( source ) (uint16)(((uint32)source)>>16)
+#define lo_wordu( source ) (uint16)(((uint32)source)&0xFFFF)
+#define hi_byteu( source ) (uint16)(((uint32)source)>>8)
+#define lo_byteu( source ) (uint16)(((uint32)source)&0xFF)
 #endif

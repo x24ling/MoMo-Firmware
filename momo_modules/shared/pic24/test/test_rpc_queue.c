@@ -4,10 +4,7 @@
 #include "ringbuffer.h"
 #include <string.h>
 
-void asm_sleep()
-{
-	// do nothing
-}
+#define asm_sleep()
 
 static int task_count = 0;
 void setUp(void) {

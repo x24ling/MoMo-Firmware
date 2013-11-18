@@ -21,9 +21,7 @@ typedef enum {
   BE   = 0b11000111
 } memory_instructions;
 
-static unsigned short memory_capacity;
-
-bool shift_out( BYTE data );
+static bool shift_out( BYTE data );
 
 #define WRITE_MODE_ENABLE() shift_out( WREN )
 #define WRITE_MODE_DISABLE() shift_out( WRDI )
@@ -34,7 +32,7 @@ bool shift_out( BYTE data );
 #define ERASE_SUBSECTION() shift_out( SSE )
 #define ERASE_ALL() shift_out( BE )
 
-void configure_SPI() {
+void _BOOTLOADER_CODE configure_SPI() {
   SPI1CON1bits.MODE16 = 0; //communication is byte-wide
   SPI1CON1bits.MSTEN = 1; //SPI is in master mode
   SPI1CON1bits.CKP = 1; //data is clocked out on high-low transition
@@ -48,10 +46,10 @@ void configure_SPI() {
   TRISBbits.TRISB12 = 0; // SDCK
 
   DISABLE_MEMORY(); //idle state of SS is high
-  mem_test();
+  //mem_test();
 }
 
-static bool shift_impl( BYTE data, BYTE* data_out ) {
+static bool _BOOTLOADER_CODE shift_impl( BYTE data, BYTE* data_out ) {
   unsigned short count = 0;
   while ( MEMORY_TX_STATUS && count<TIMEOUT)
     ++count;
@@ -62,16 +60,18 @@ static bool shift_impl( BYTE data, BYTE* data_out ) {
   if (count==TIMEOUT)
     return false;
 
+  if ( data_out == 0 )
+    data_out = &data;
   *data_out = MEMORY_BUFFER_REGISTER;
   return true;
 }
-bool shift_out( BYTE data ) {
-  return shift_impl( data, &data );
+static bool _BOOTLOADER_CODE shift_out( BYTE data ) {
+  return shift_impl( data, 0 );
 }
 
 //Shift_out the lowest num_bytes bytes of data
 //max sizeof(long) bytes, MSB first
-bool shift_n_out( unsigned long data, short num_bytes ) {
+static bool _BOOTLOADER_CODE shift_n_out( unsigned long data, short num_bytes ) {
   num_bytes = (num_bytes-1)<<3; //*=8
   while( num_bytes >= 0 ) {
     if ( !shift_out( (data>>num_bytes)&0xFF )) {
@@ -82,23 +82,32 @@ bool shift_n_out( unsigned long data, short num_bytes ) {
   return true;
 }
 
-bool shift_in( BYTE* out ) {
+static bool _BOOTLOADER_CODE shift_in( BYTE* out ) {
   return shift_impl( 0x00, out );
 }
 
-bool mem_test() {
-  BYTE manufacturer_id;
-  BYTE memory_type;
-
+static bool _BOOTLOADER_CODE read_meta_data( BYTE* manufacturer_id,
+                            BYTE* memory_type,
+                            BYTE* memory_capacity ) {
+  bool success = true;
   ENABLE_MEMORY();
 
   READ_IDENTIFICATION();
-  shift_in( &manufacturer_id );
-  shift_in( &memory_type );
-  shift_in( (BYTE*)&memory_capacity );
+  if ( !shift_in( manufacturer_id )
+    || !shift_in( memory_type )
+    || !shift_in( memory_capacity ) )
+    success = false;
 
   DISABLE_MEMORY();
+  return success;
+}
 
+bool _BOOTLOADER_CODE mem_test()
+{
+  BYTE manufacturer_id;
+  BYTE memory_type;
+
+  read_meta_data( &manufacturer_id, &memory_type, 0 );
   if ( manufacturer_id != 0x20 || memory_type != 0x71 ) { // M25PX80 = 0x20, 0x71
     return false;
   }
@@ -106,16 +115,16 @@ bool mem_test() {
   return true;
 }
 
-static inline void _impl_mem_status( BYTE* status) {
+static inline void _BOOTLOADER_CODE _impl_mem_status( BYTE* status) {
   READ_STATUS_REGISTER();
   shift_in( status );
 }
-static inline void mem_enable_write() {
+static inline void _BOOTLOADER_CODE mem_enable_write() {
   ENABLE_MEMORY();
   WRITE_MODE_ENABLE();
   DISABLE_MEMORY();
 }
-static inline void mem_wait_while_writing() {
+static inline void _BOOTLOADER_CODE mem_wait_while_writing() {
   ENABLE_MEMORY();
   BYTE status;
   _impl_mem_status( &status );
@@ -125,8 +134,13 @@ static inline void mem_wait_while_writing() {
   DISABLE_MEMORY();
 }
 
+bool _BOOTLOADER_CODE mem_write_byte( unsigned long addr, BYTE data )
+{
+  return mem_write( addr, &data, 1 );
+}
+
 // Length is capped at 256, 1 page of flash memory.
-bool mem_write(unsigned long addr, const BYTE *data, unsigned int length) {
+bool _BOOTLOADER_CODE mem_write(unsigned long addr, const BYTE *data, unsigned int length) {
   int i;
   bool success = true;
   if ( length > 256) { //TODO: bitwise-ify
@@ -155,7 +169,7 @@ bool mem_write(unsigned long addr, const BYTE *data, unsigned int length) {
   return success;
 }
 
-bool mem_read(unsigned long addr, BYTE* buf, unsigned int numBytes) {
+bool _BOOTLOADER_CODE mem_read(unsigned long addr, BYTE* buf, unsigned int numBytes) {
   BYTE* bufEnd = buf+numBytes;
   bool success = true;
 
@@ -182,7 +196,7 @@ bool mem_read(unsigned long addr, BYTE* buf, unsigned int numBytes) {
   return success;
 }
 
-BYTE mem_status() {
+BYTE _BOOTLOADER_CODE mem_status() {
   BYTE status;
   ENABLE_MEMORY();
   _impl_mem_status( &status );
@@ -190,12 +204,14 @@ BYTE mem_status() {
   return status;
 }
 
-unsigned short mem_capacity()
+unsigned short _BOOTLOADER_CODE  mem_capacity()
 {
-  return memory_capacity;
+  unsigned short capacity;
+  read_meta_data( 0, 0, (BYTE*)&capacity );
+  return capacity;
 }
 
-void mem_clear_all() {
+void _BOOTLOADER_CODE mem_clear_all() {
   mem_wait_while_writing();
   mem_enable_write();
 
@@ -204,7 +220,7 @@ void mem_clear_all() {
   DISABLE_MEMORY();
 }
 
-void mem_clear_subsection( unsigned long addr ) 
+void _BOOTLOADER_CODE mem_clear_subsection( unsigned long addr ) 
 {
   addr &= MEMORY_ADDRESS_MASK;
 
