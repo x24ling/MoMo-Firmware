@@ -33,6 +33,10 @@ static bool shift_out( BYTE data );
 #define ERASE_ALL() shift_out( BE )
 
 void _BOOTLOADER_CODE configure_SPI() {
+  //Power on the the Memory Module
+  _RB7 = 1;
+  _TRISB7 = 0;
+
   SPI1CON1bits.MODE16 = 0; //communication is byte-wide
   SPI1CON1bits.MSTEN = 1; //SPI is in master mode
   SPI1CON1bits.CKP = 1; //data is clocked out on high-low transition

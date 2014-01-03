@@ -49,17 +49,9 @@
 #pragma config DSBOREN = ON             // Deep Sleep Zero-Power BOR Enable bit (Deep Sleep BOR enabled in Deep Sleep)
 #pragma config DSWDTEN = OFF            // Deep Sleep Watchdog Timer Enable bit (DSWDT disabled)
 
-ScheduledTask task1;
-
-ScheduledTask i2c;
-
 int main(void)
 {
     AD1PCFG = 0xFFFF;
-
-    //Enable the Memory Module
-    _RB7 = 1;
-    _TRISB7 = 0;
 
     register_reset_handlers();
     handle_reset();
