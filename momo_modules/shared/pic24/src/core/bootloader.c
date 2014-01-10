@@ -63,23 +63,6 @@ static bool _BOOTLOADER_CODE WriteProgramRow( uint32 destinationAddress, uint32 
 
 	  WriteLatch( hi_wordu( destinationAddress ), lo_wordu( destinationAddress ), hi_wordu( temp ), lo_wordu( temp ) );
 
-	  /* Device ID errata workaround: Save data at any address that has LSB 0x18 */
-	  /*                              Reload data at address with LSB of 0x18 */
-	  /*
-	  uint32 tempAddr = 0;
-		uint32 tempData = 0;
-		if(( destinationAddress & 0x0000001F) == 0x18)
-		{
-			tempAddr = destinationAddress;
-			tempData = temp;
-		}
-
-		if((size !=0) && (((size + 1) % 64) == 0))
-		{
-	    WriteLatch( hi_wordu( tempAddr ), lo_wordu( tempAddr ), hi_wordu( tempData ), lo_wordu( tempData ) );
-			WriteMem( PM_ROW_WRITE );
-		} */
-
 		destinationAddress += 2;
 	}
 	return true;
